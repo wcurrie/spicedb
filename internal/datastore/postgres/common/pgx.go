@@ -36,7 +36,7 @@ func NewPGXExecutor(querier DBFuncQuerier) common.ExecuteQueryFunc {
 func queryTuples(ctx context.Context, sqlStatement string, args []any, span trace.Span, tx DBFuncQuerier) ([]*corev1.RelationTuple, error) {
 	var tuples []*corev1.RelationTuple
 	err := tx.QueryFunc(ctx, func(ctx context.Context, rows pgx.Rows) error {
-		span.AddEvent("Query issued to database")
+		span.AddEvent("sql: " + common.InlineSqlArgs(sqlStatement, args))
 
 		for rows.Next() {
 			nextTuple := &corev1.RelationTuple{

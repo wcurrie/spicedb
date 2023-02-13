@@ -106,7 +106,7 @@ func (mr *mysqlReader) ReadNamespaceByName(ctx context.Context, nsName string) (
 }
 
 func loadNamespace(ctx context.Context, namespace string, tx *sql.Tx, baseQuery sq.SelectBuilder) (*core.NamespaceDefinition, datastore.Revision, error) {
-	ctx, span := tracer.Start(ctx, "loadNamespace")
+	ctx, span := tracer.Start(ctx, fmt.Sprintf("loadNamespace %v", namespace))
 	defer span.End()
 
 	query, args, err := baseQuery.Where(sq.Eq{colNamespace: namespace}).ToSql()
@@ -117,6 +117,7 @@ func loadNamespace(ctx context.Context, namespace string, tx *sql.Tx, baseQuery 
 	var config []byte
 	var txID uint64
 	err = tx.QueryRowContext(ctx, query, args...).Scan(&config, &txID)
+	span.AddEvent("sql: " + common.InlineSqlArgs(query, args))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			err = datastore.NewNamespaceNotFoundErr(namespace)
@@ -176,6 +177,8 @@ func (mr *mysqlReader) LookupNamespacesWithNames(ctx context.Context, nsNames []
 }
 
 func loadAllNamespaces(ctx context.Context, tx *sql.Tx, queryBuilder sq.SelectBuilder) ([]datastore.RevisionedNamespace, error) {
+	ctx, span := tracer.Start(ctx, "loadAllNamespaces")
+	defer span.End()
 	query, args, err := queryBuilder.ToSql()
 	if err != nil {
 		return nil, err
@@ -184,6 +187,7 @@ func loadAllNamespaces(ctx context.Context, tx *sql.Tx, queryBuilder sq.SelectBu
 	var nsDefs []datastore.RevisionedNamespace
 
 	rows, err := tx.QueryContext(ctx, query, args...)
+	span.AddEvent("sql: " + common.InlineSqlArgs(query, args))
 	if err != nil {
 		return nil, err
 	}

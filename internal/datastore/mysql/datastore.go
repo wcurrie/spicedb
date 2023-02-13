@@ -381,7 +381,7 @@ func newMySQLExecutor(tx querier) common.ExecuteQueryFunc {
 		}
 		defer common.LogOnError(ctx, rows.Close)
 
-		span.AddEvent("Query issued to database")
+		span.AddEvent("sql: " + common.InlineSqlArgs(sqlQuery, args))
 
 		var tuples []*core.RelationTuple
 		for rows.Next() {

@@ -97,6 +97,11 @@ func TestMySQLDatastoreDSNWithoutParseTime(t *testing.T) {
 	require.ErrorContains(t, err, "https://spicedb.dev/d/parse-time-mysql")
 }
 
+func TestInlineSqlArgs(t *testing.T) {
+	query := inlineSqlArgs("select * from foo where id = ?", []interface{}{"a"})
+	assert.Equal(t, "select * from foo where id = 'a'", query)
+}
+
 func TestMySQL8Datastore(t *testing.T) {
 	b := testdatastore.RunMySQLForTestingWithOptions(t, testdatastore.MySQLTesterOptions{MigrateForNewDatastore: true}, "")
 	dst := datastoreTester{b: b, t: t}

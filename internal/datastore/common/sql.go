@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strings"
 
@@ -527,6 +528,20 @@ func (tqs QueryExecutor) ExecuteQuery(
 	}
 
 	return NewSliceRelationshipIterator(queryTuples, queryOpts.Sort), nil
+}
+
+func InlineSqlArgs(sqlQuery string, args []interface{}) string {
+	for _, arg := range args {
+		var formattedArg string
+		switch arg.(type) {
+		case string:
+			formattedArg = fmt.Sprintf("'%v'", arg)
+		default:
+			formattedArg = fmt.Sprint(arg)
+		}
+		sqlQuery = strings.Replace(sqlQuery, "?", formattedArg, 1)
+	}
+	return sqlQuery
 }
 
 // ExecuteQueryFunc is a function that can be used to execute a single rendered SQL query.
